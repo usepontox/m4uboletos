@@ -92,29 +92,29 @@ function groupDesmembramentos(desmembramentos) {
     const grouped = [];
     const groupMap = new Map();
 
-    for (const desm of desmembramentos) {
-        const key = `${normalizeVendorName(desm.vendor)}_${desm.pdvCode}`;
+    // CRITICAL FIX: Include vencimento in key to preserve multiple entries with same PDV but different dates
+    const key = `${normalizeVendorName(desm.vendor)}_${desm.pdvCode}_${desm.vencimento}`;
 
-        if (groupMap.has(key)) {
-            // Same vendor, PDV AND vencimento - sum values (rare case)
-            const existing = groupMap.get(key);
-            existing.value += desm.value;
-        } else {
-            // New combination of vendor + PDV + vencimento
-            groupMap.set(key, {
-                vendor: desm.vendor,
-                pdvCode: desm.pdvCode,
-                value: desm.value,
-                vencimento: desm.vencimento,
-                ddd: desm.ddd
-            });
-        }
+    if (groupMap.has(key)) {
+        // Same vendor, PDV AND vencimento - sum values (rare case)
+        const existing = groupMap.get(key);
+        existing.value += desm.value;
+    } else {
+        // New combination of vendor + PDV + vencimento
+        groupMap.set(key, {
+            vendor: desm.vendor,
+            pdvCode: desm.pdvCode,
+            value: desm.value,
+            vencimento: desm.vencimento,
+            ddd: desm.ddd
+        });
     }
+}
 
-    const result = Array.from(groupMap.values());
-    console.log(`Desmembramentos agrupados: ${desmembramentos.length} → ${result.length} únicos (por PDV + vencimento)`);
+const result = Array.from(groupMap.values());
+console.log(`Desmembramentos agrupados: ${desmembramentos.length} → ${result.length} únicos (por PDV + vencimento)`);
 
-    return result;
+return result;
 }
 
 /**
