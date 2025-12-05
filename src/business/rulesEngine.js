@@ -47,290 +47,359 @@ function levenshteinDistance(a, b) {
             }
         }
 
-        /**
-         * Groups sales data by vendor, summing all values
-         */
-        function groupSalesByVendor(salesData) {
-            console.log('\n=== Agrupando vendas por vendedor ===');
-            const vendorMap = new Map();
+        return matrix[b.length][a.length];
+    }
 
-            for (const sale of salesData) {
-                const normalizedName = normalizeVendorName(sale.vendor);
+    /**
+     * Checks if two strings are fuzzy equal
+     */
+    function isFuzzyEqual(str1, str2) {
+        if (str1 === str2) return true;
 
-                if (vendorMap.has(normalizedName)) {
-                    // Vendor already exists, sum the values
-                    const existing = vendorMap.get(normalizedName);
-                    existing.qtdVendas += sale.qtdVendas;
-                    existing.valorLiquidoVendas += sale.valorLiquidoVendas;
-                    existing.valorBrutoVendas += sale.valorBrutoVendas;
-                    existing.qtdCobrancas += sale.qtdCobrancas;
-                    existing.valorLiquidoCobrancas += sale.valorLiquidoCobrancas;
-                    existing.valorBrutoCobrancas += sale.valorBrutoCobrancas;
-                } else {
-                    // New vendor, add to map
-                    vendorMap.set(normalizedName, {
-                        vendor: sale.vendor, // Keep original name
-                        ddd: sale.ddd,
-                        qtdVendas: sale.qtdVendas,
-                        valorLiquidoVendas: sale.valorLiquidoVendas,
-                        valorBrutoVendas: sale.valorBrutoVendas,
-                        qtdCobrancas: sale.qtdCobrancas,
-                        valorLiquidoCobrancas: sale.valorLiquidoCobrancas,
-                        valorBrutoCobrancas: sale.valorBrutoCobrancas
-                    });
+        const distance = levenshteinDistance(str1, str2);
+        const maxLength = Math.max(str1.length, str2.length);
+
+        let allowedEdits = 0;
+        if (maxLength > 10) allowedEdits = 2;
+        else if (maxLength >= 5) allowedEdits = 1;
+
+        return distance <= allowedEdits;
+    }
+
+    /**
+     * Checks if two vendor names match using fuzzy logic
+     */
+    function vendorsMatch(name1, name2) {
+        const normalized1 = normalizeVendorName(name1);
+        const normalized2 = normalizeVendorName(name2);
+
+        // 1. Exact match
+        if (normalized1 === normalized2) return true;
+
+        // 2. One contains the other (Exact substring)
+        if (normalized1.includes(normalized2) || normalized2.includes(normalized1)) return true;
+
+        const words1 = normalized1.split(' ');
+        const words2 = normalized2.split(' ');
+
+        // 3. Word-based matching
+        if (words1.length > 0 && words2.length > 0) {
+            const first1 = words1[0];
+            const first2 = words2[0];
+
+            // Check if first names fuzzy match
+            if (isFuzzyEqual(first1, first2)) {
+                // Case A: One of them is a single word (e.g. "Adenison" vs "Adenilson Penteado")
+                // Since we already allow exact substring matching (step 2), this covers the typo case for single words
+                if (words1.length === 1 || words2.length === 1) {
+                    console.log(`  Fuzzy Match (First Name): "${name1}" ~= "${name2}"`);
+                    return true;
+                }
+
+                // Case B: Both have multiple words - check last name too
+                const last1 = words1[words1.length - 1];
+                const last2 = words2[words2.length - 1];
+
+                if (isFuzzyEqual(last1, last2)) {
+                    console.log(`  Fuzzy Match (First+Last): "${name1}" ~= "${name2}"`);
+                    return true;
                 }
             }
-
-            const grouped = Array.from(vendorMap.values());
-            console.log(`Total de vendedores únicos: ${grouped.length}`);
-
-            return grouped;
         }
 
-        /**
-         * Groups desmembramentos by vendor, PDV code AND vencimento
-         */
-        function groupDesmembramentos(desmembramentos) {
-            console.log('\n=== Agrupando desmembramentos por vendedor, PDV e vencimento ===');
-            console.log('🔥 VERSÃO: 2024-12-05 16:10 - VENCIMENTO NO AGRUPAMENTO! 🔥');
-            const groupMap = new Map();
-
-            for (const desm of desmembramentos) {
-                // CRITICAL FIX: Include vencimento in key to preserve multiple entries with same PDV but different dates
-                const key = `${normalizeVendorName(desm.vendor)}_${desm.pdvCode}_${desm.vencimento}`;
-
-                if (groupMap.has(key)) {
-                    // Same vendor, PDV AND vencimento - sum values (rare case)
-                    const existing = groupMap.get(key);
-                    existing.value += desm.value;
-                } else {
-                    // New combination of vendor + PDV + vencimento
-                    groupMap.set(key, {
-                        vendor: desm.vendor,
-                        pdvCode: desm.pdvCode,
-                        value: desm.value,
-                        vencimento: desm.vencimento,
-                        ddd: desm.ddd
-                    });
-                }
-            }
-
-            const result = Array.from(groupMap.values());
-            console.log(`Desmembramentos agrupados: ${desmembramentos.length} → ${result.length} únicos (por PDV + vencimento)`);
-
-            return result;
+        // 4. Full string fuzzy match (fallback for other cases)
+        if (isFuzzyEqual(normalized1, normalized2)) {
+            console.log(`  Fuzzy Match (Full): "${name1}" ~= "${name2}"`);
+            return true;
         }
 
-        /**
-         * Applies business rules based on DDD
-         */
-        function applyDDDRules(salesRecord, ddd) {
-            let finalValue = 0;
+        return false;
+    }
 
-            if (ddd === 42 || ddd === 47) {
-                // DDD 42/47: Sum Vendas Líquidas + Cobranças Líquidas
-                finalValue = salesRecord.valorLiquidoVendas + salesRecord.valorLiquidoCobrancas;
-            } else if (ddd === 61 || ddd === 63) {
-                // DDD 61/63: Only Vendas Líquidas
-                finalValue = salesRecord.valorLiquidoVendas;
+    /**
+     * Groups sales data by vendor, summing all values
+     */
+    function groupSalesByVendor(salesData) {
+        console.log('\n=== Agrupando vendas por vendedor ===');
+        const vendorMap = new Map();
+
+        for (const sale of salesData) {
+            const normalizedName = normalizeVendorName(sale.vendor);
+
+            if (vendorMap.has(normalizedName)) {
+                // Vendor already exists, sum the values
+                const existing = vendorMap.get(normalizedName);
+                existing.qtdVendas += sale.qtdVendas;
+                existing.valorLiquidoVendas += sale.valorLiquidoVendas;
+                existing.valorBrutoVendas += sale.valorBrutoVendas;
+                existing.qtdCobrancas += sale.qtdCobrancas;
+                existing.valorLiquidoCobrancas += sale.valorLiquidoCobrancas;
+                existing.valorBrutoCobrancas += sale.valorBrutoCobrancas;
             } else {
-                // Default: use vendas líquidas
-                finalValue = salesRecord.valorLiquidoVendas;
+                // New vendor, add to map
+                vendorMap.set(normalizedName, {
+                    vendor: sale.vendor, // Keep original name
+                    ddd: sale.ddd,
+                    qtdVendas: sale.qtdVendas,
+                    valorLiquidoVendas: sale.valorLiquidoVendas,
+                    valorBrutoVendas: sale.valorBrutoVendas,
+                    qtdCobrancas: sale.qtdCobrancas,
+                    valorLiquidoCobrancas: sale.valorLiquidoCobrancas,
+                    valorBrutoCobrancas: sale.valorBrutoCobrancas
+                });
             }
-
-            return finalValue;
         }
 
-        /**
-         * Splits boleto value if it exceeds limit based on DDD
-         */
-        function splitBoletoIfNeeded(value, ddd, period) {
-            const limit = ddd === 63 ? 1000 : (ddd === 61 ? 5000 : Infinity);
+        const grouped = Array.from(vendorMap.values());
+        console.log(`Total de vendedores únicos: ${grouped.length}`);
 
-            if (value <= limit) {
-                return [value];
+        return grouped;
+    }
+
+    /**
+     * Groups desmembramentos by vendor, PDV code AND vencimento
+     */
+    function groupDesmembramentos(desmembramentos) {
+        console.log('\n=== Agrupando desmembramentos por vendedor, PDV e vencimento ===');
+        console.log('🔥 VERSÃO: 2024-12-05 16:10 - VENCIMENTO NO AGRUPAMENTO! 🔥');
+        const groupMap = new Map();
+
+        for (const desm of desmembramentos) {
+            // CRITICAL FIX: Include vencimento in key to preserve multiple entries with same PDV but different dates
+            const key = `${normalizeVendorName(desm.vendor)}_${desm.pdvCode}_${desm.vencimento}`;
+
+            if (groupMap.has(key)) {
+                // Same vendor, PDV AND vencimento - sum values (rare case)
+                const existing = groupMap.get(key);
+                existing.value += desm.value;
+            } else {
+                // New combination of vendor + PDV + vencimento
+                groupMap.set(key, {
+                    vendor: desm.vendor,
+                    pdvCode: desm.pdvCode,
+                    value: desm.value,
+                    vencimento: desm.vencimento,
+                    ddd: desm.ddd
+                });
             }
-
-            // Extract day from period (format: DD.MM.YY (00:00) A DD.MM.YY (23:59))
-            const dayMatch = period.match(/^(\d{2})/);
-            const day = dayMatch ? parseInt(dayMatch[1]) : 1;
-
-            const splits = [];
-            let remaining = value;
-            let splitIndex = 0;
-
-            while (remaining > 0) {
-                let splitValue;
-
-                if (ddd === 63) {
-                    // DDD 63: R$929.00, R$929.10, R$929.20, etc.
-                    splitValue = Math.min(remaining, 900 + day + (splitIndex * 0.10));
-                } else if (ddd === 61) {
-                    // DDD 61: R$4,929.00, R$4,929.10, R$4,929.20, etc.
-                    splitValue = Math.min(remaining, 4900 + day + (splitIndex * 0.10));
-                } else {
-                    splitValue = remaining;
-                }
-
-                splits.push(Math.min(splitValue, remaining));
-                remaining -= splitValue;
-                splitIndex++;
-
-                // Safety check to prevent infinite loop
-                if (splitIndex > 100) {
-                    console.warn('Muitas divisões detectadas, interrompendo...');
-                    break;
-                }
-            }
-
-            return splits;
         }
 
-        /**
-         * Applies desmembramentos to sales data
-         */
-        function applyDesmembramentos(salesData, desmembramentos) {
-            console.log('\n=== Aplicando Desmembramentos ===');
+        const result = Array.from(groupMap.values());
+        console.log(`Desmembramentos agrupados: ${desmembramentos.length} → ${result.length} únicos (por PDV + vencimento)`);
 
-            // CRITICAL: Group desmembramentos by vendor, PDV AND vencimento first!
-            const groupedDesm = groupDesmembramentos(desmembramentos);
+        return result;
+    }
 
-            const result = [];
+    /**
+     * Applies business rules based on DDD
+     */
+    function applyDDDRules(salesRecord, ddd) {
+        let finalValue = 0;
 
-            for (const sale of salesData) {
-                console.log(`\nProcessando vendedor: ${sale.vendor} (Valor total: R$ ${sale.finalValue.toFixed(2)})`);
+        if (ddd === 42 || ddd === 47) {
+            // DDD 42/47: Sum Vendas Líquidas + Cobranças Líquidas
+            finalValue = salesRecord.valorLiquidoVendas + salesRecord.valorLiquidoCobrancas;
+        } else if (ddd === 61 || ddd === 63) {
+            // DDD 61/63: Only Vendas Líquidas
+            finalValue = salesRecord.valorLiquidoVendas;
+        } else {
+            // Default: use vendas líquidas
+            finalValue = salesRecord.valorLiquidoVendas;
+        }
 
-                // Find desmembramentos for this vendor AND same DDD
-                const vendorDesm = groupedDesm.filter(d =>
-                    vendorsMatch(d.vendor, sale.vendor) && d.ddd === sale.ddd
-                );
+        return finalValue;
+    }
 
-                if (vendorDesm.length > 0) {
-                    console.log(`  Encontrados ${vendorDesm.length} PDVs únicos:`);
+    /**
+     * Splits boleto value if it exceeds limit based on DDD
+     */
+    function splitBoletoIfNeeded(value, ddd, period) {
+        const limit = ddd === 63 ? 1000 : (ddd === 61 ? 5000 : Infinity);
 
-                    // Calculate total desmembramento value
-                    let totalDesm = 0;
-                    vendorDesm.forEach(d => {
-                        console.log(`    - PDV ${d.pdvCode} (venc: ${d.vencimento}): R$ ${d.value.toFixed(2)}`);
-                        totalDesm += d.value;
-                    });
+        if (value <= limit) {
+            return [value];
+        }
 
-                    console.log(`  Total desmembrado: R$ ${totalDesm.toFixed(2)}`);
+        // Extract day from period (format: DD.MM.YY (00:00) A DD.MM.YY (23:59))
+        const dayMatch = period.match(/^(\d{2})/);
+        const day = dayMatch ? parseInt(dayMatch[1]) : 1;
 
-                    // Calculate remaining value after desmembramentos
-                    const remainingValue = sale.finalValue - totalDesm;
-                    console.log(`  Valor restante para ${sale.vendor}: R$ ${remainingValue.toFixed(2)}`);
+        const splits = [];
+        let remaining = value;
+        let splitIndex = 0;
 
-                    // Add main vendor entry with remaining value FIRST (WITHOUT PDV code)
-                    if (remainingValue > 0) {
-                        result.push({
-                            ...sale,
-                            finalValue: remainingValue,
-                            isDesmembramento: false,
-                            pdvCode: null,
-                            vencimento: null
-                        });
-                    } else if (remainingValue < 0) {
-                        console.warn(`  AVISO: Valor restante negativo! Desmembramentos excedem total de vendas.`);
-                    }
+        while (remaining > 0) {
+            let splitValue;
 
-                    // Then add desmembramento entries (ONE per PDV + vencimento combination)
-                    for (const desm of vendorDesm) {
-                        result.push({
-                            vendor: sale.vendor,
-                            finalValue: desm.value,
-                            pdvCode: desm.pdvCode,
-                            vencimento: desm.vencimento,
-                            isDesmembramento: true,
-                            ddd: sale.ddd || desm.ddd
-                        });
-                    }
-                } else {
-                    console.log(`  Nenhum desmembramento encontrado`);
-                    // No desmembramentos, keep original
+            if (ddd === 63) {
+                // DDD 63: R$929.00, R$929.10, R$929.20, etc.
+                splitValue = Math.min(remaining, 900 + day + (splitIndex * 0.10));
+            } else if (ddd === 61) {
+                // DDD 61: R$4,929.00, R$4,929.10, R$4,929.20, etc.
+                splitValue = Math.min(remaining, 4900 + day + (splitIndex * 0.10));
+            } else {
+                splitValue = remaining;
+            }
+
+            splits.push(Math.min(splitValue, remaining));
+            remaining -= splitValue;
+            splitIndex++;
+
+            // Safety check to prevent infinite loop
+            if (splitIndex > 100) {
+                console.warn('Muitas divisões detectadas, interrompendo...');
+                break;
+            }
+        }
+
+        return splits;
+    }
+
+    /**
+     * Applies desmembramentos to sales data
+     */
+    function applyDesmembramentos(salesData, desmembramentos) {
+        console.log('\n=== Aplicando Desmembramentos ===');
+
+        // CRITICAL: Group desmembramentos by vendor, PDV AND vencimento first!
+        const groupedDesm = groupDesmembramentos(desmembramentos);
+
+        const result = [];
+
+        for (const sale of salesData) {
+            console.log(`\nProcessando vendedor: ${sale.vendor} (Valor total: R$ ${sale.finalValue.toFixed(2)})`);
+
+            // Find desmembramentos for this vendor AND same DDD
+            const vendorDesm = groupedDesm.filter(d =>
+                vendorsMatch(d.vendor, sale.vendor) && d.ddd === sale.ddd
+            );
+
+            if (vendorDesm.length > 0) {
+                console.log(`  Encontrados ${vendorDesm.length} PDVs únicos:`);
+
+                // Calculate total desmembramento value
+                let totalDesm = 0;
+                vendorDesm.forEach(d => {
+                    console.log(`    - PDV ${d.pdvCode} (venc: ${d.vencimento}): R$ ${d.value.toFixed(2)}`);
+                    totalDesm += d.value;
+                });
+
+                console.log(`  Total desmembrado: R$ ${totalDesm.toFixed(2)}`);
+
+                // Calculate remaining value after desmembramentos
+                const remainingValue = sale.finalValue - totalDesm;
+                console.log(`  Valor restante para ${sale.vendor}: R$ ${remainingValue.toFixed(2)}`);
+
+                // Add main vendor entry with remaining value FIRST (WITHOUT PDV code)
+                if (remainingValue > 0) {
                     result.push({
                         ...sale,
+                        finalValue: remainingValue,
                         isDesmembramento: false,
                         pdvCode: null,
                         vencimento: null
                     });
+                } else if (remainingValue < 0) {
+                    console.warn(`  AVISO: Valor restante negativo! Desmembramentos excedem total de vendas.`);
                 }
-            }
 
-            console.log(`\n=== Total de registros após desmembramentos: ${result.length} ===\n`);
-            return result;
-        }
-
-        /**
-         * Processes all sales data with business rules
-         */
-        function processBusinessRules(salesData, desmembramentos, period) {
-            console.log('\n=== Iniciando Processamento de Regras de Negócio ===');
-            console.log(`Total de linhas de vendas: ${salesData.length}`);
-            console.log(`Total de desmembramentos: ${desmembramentos.length}`);
-
-            // Step 1: Group sales by vendor (CRITICAL FIX!)
-            const groupedSales = groupSalesByVendor(salesData);
-            console.log(`Total de vendedores únicos após agrupamento: ${groupedSales.length}`);
-
-            // Step 2: Apply DDD-specific rules to grouped data
-            const processedSales = groupedSales.map(sale => {
-                const ddd = sale.ddd;
-                const finalValue = applyDDDRules(sale, ddd);
-
-                return {
-                    ...sale,
-                    ddd,
-                    finalValue
-                };
-            });
-
-            // Step 3: Apply desmembramentos (now with grouping by PDV + vencimento!)
-            const withDesmembramentos = applyDesmembramentos(processedSales, desmembramentos);
-
-            // Step 4: Split boletos if needed
-            const finalData = [];
-            for (const item of withDesmembramentos) {
-                const splits = splitBoletoIfNeeded(item.finalValue, item.ddd, period);
-
-                if (splits.length === 1) {
-                    finalData.push(item);
-                } else {
-                    console.log(`Dividindo boleto de ${item.vendor}: ${splits.length} partes`);
-                    // Add multiple entries for split boletos
-                    splits.forEach((splitValue, index) => {
-                        finalData.push({
-                            ...item,
-                            finalValue: splitValue,
-                            isSplit: true,
-                            splitIndex: index + 1,
-                            totalSplits: splits.length
-                        });
+                // Then add desmembramento entries (ONE per PDV + vencimento combination)
+                for (const desm of vendorDesm) {
+                    result.push({
+                        vendor: sale.vendor,
+                        finalValue: desm.value,
+                        pdvCode: desm.pdvCode,
+                        vencimento: desm.vencimento,
+                        isDesmembramento: true,
+                        ddd: sale.ddd || desm.ddd
                     });
                 }
+            } else {
+                console.log(`  Nenhum desmembramento encontrado`);
+                // No desmembramentos, keep original
+                result.push({
+                    ...sale,
+                    isDesmembramento: false,
+                    pdvCode: null,
+                    vencimento: null
+                });
             }
-
-            console.log(`\n=== Processamento concluído: ${finalData.length} registros finais ===\n`);
-            return finalData;
         }
 
-        /**
-         * Generates sequential numbers for boletos
-         */
-        function generateSequentialNumbers(data, startingNumber) {
-            return data.map((item, index) => ({
-                ...item,
-                numero: startingNumber + index
-            }));
+        console.log(`\n=== Total de registros após desmembramentos: ${result.length} ===\n`);
+        return result;
+    }
+
+    /**
+     * Processes all sales data with business rules
+     */
+    function processBusinessRules(salesData, desmembramentos, period) {
+        console.log('\n=== Iniciando Processamento de Regras de Negócio ===');
+        console.log(`Total de linhas de vendas: ${salesData.length}`);
+        console.log(`Total de desmembramentos: ${desmembramentos.length}`);
+
+        // Step 1: Group sales by vendor (CRITICAL FIX!)
+        const groupedSales = groupSalesByVendor(salesData);
+        console.log(`Total de vendedores únicos após agrupamento: ${groupedSales.length}`);
+
+        // Step 2: Apply DDD-specific rules to grouped data
+        const processedSales = groupedSales.map(sale => {
+            const ddd = sale.ddd;
+            const finalValue = applyDDDRules(sale, ddd);
+
+            return {
+                ...sale,
+                ddd,
+                finalValue
+            };
+        });
+
+        // Step 3: Apply desmembramentos (now with grouping by PDV + vencimento!)
+        const withDesmembramentos = applyDesmembramentos(processedSales, desmembramentos);
+
+        // Step 4: Split boletos if needed
+        const finalData = [];
+        for (const item of withDesmembramentos) {
+            const splits = splitBoletoIfNeeded(item.finalValue, item.ddd, period);
+
+            if (splits.length === 1) {
+                finalData.push(item);
+            } else {
+                console.log(`Dividindo boleto de ${item.vendor}: ${splits.length} partes`);
+                // Add multiple entries for split boletos
+                splits.forEach((splitValue, index) => {
+                    finalData.push({
+                        ...item,
+                        finalValue: splitValue,
+                        isSplit: true,
+                        splitIndex: index + 1,
+                        totalSplits: splits.length
+                    });
+                });
+            }
         }
 
-        module.exports = {
-            processBusinessRules,
-            generateSequentialNumbers,
-            applyDDDRules,
-            splitBoletoIfNeeded,
-            normalizeVendorName,
-            vendorsMatch,
-            groupSalesByVendor,
-            groupDesmembramentos
-        };
+        console.log(`\n=== Processamento concluído: ${finalData.length} registros finais ===\n`);
+        return finalData;
+    }
+
+    /**
+     * Generates sequential numbers for boletos
+     */
+    function generateSequentialNumbers(data, startingNumber) {
+        return data.map((item, index) => ({
+            ...item,
+            numero: startingNumber + index
+        }));
+    }
+
+    module.exports = {
+        processBusinessRules,
+        generateSequentialNumbers,
+        applyDDDRules,
+        splitBoletoIfNeeded,
+        normalizeVendorName,
+        vendorsMatch,
+        groupSalesByVendor,
+        groupDesmembramentos
+    };
