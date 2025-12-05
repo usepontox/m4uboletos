@@ -87,8 +87,8 @@ function groupSalesByVendor(salesData) {
  * Groups desmembramentos by vendor and PDV code, summing values
  */
 function groupDesmembramentos(desmembramentos) {
-    console.log('\n=== Agrupando desmembramentos por vendedor e PDV ===');
-    console.log('🔥 VERSÃO: 2024-12-05 15:23 - AGRUPAMENTO ATIVO! 🔥');
+    console.log('\n=== Agrupando desmembramentos por vendedor, PDV e vencimento ===');
+    console.log('🔥 VERSÃO: 2024-12-05 16:10 - VENCIMENTO NO AGRUPAMENTO! 🔥');
     const grouped = [];
     const groupMap = new Map();
 
