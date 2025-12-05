@@ -13,7 +13,46 @@ function normalizeVendorName(name) {
 }
 
 /**
- * Checks if two vendor names match
+ * Calculates Levenshtein distance between two strings
+ */
+function levenshteinDistance(a, b) {
+    if (a.length === 0) return b.length;
+    if (b.length === 0) return a.length;
+
+    const matrix = [];
+
+    // Increment along the first column of each row
+    for (let i = 0; i <= b.length; i++) {
+        matrix[i] = [i];
+    }
+
+    // Increment each column in the first row
+    for (let j = 0; j <= a.length; j++) {
+        matrix[0][j] = j;
+    }
+
+    // Fill in the rest of the matrix
+    for (let i = 1; i <= b.length; i++) {
+        for (let j = 1; j <= a.length; j++) {
+            if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                matrix[i][j] = matrix[i - 1][j - 1];
+            } else {
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j - 1] + 1, // substitution
+                    Math.min(
+                        matrix[i][j - 1] + 1, // insertion
+                        matrix[i - 1][j] + 1 // deletion
+                    )
+                );
+            }
+        }
+    }
+
+    return matrix[b.length][a.length];
+}
+
+/**
+ * Checks if two vendor names match using fuzzy logic
  */
 function vendorsMatch(name1, name2) {
     const normalized1 = normalizeVendorName(name1);
@@ -38,6 +77,23 @@ function vendorsMatch(name1, name2) {
         if (firstName1 === firstName2 && lastName1 === lastName2) {
             return true;
         }
+    }
+
+    // Fuzzy match (Levenshtein) for typos like "Adenison" vs "Adenilson"
+    // Allow 1 or 2 edits depending on length
+    const distance = levenshteinDistance(normalized1, normalized2);
+    const maxLength = Math.max(normalized1.length, normalized2.length);
+
+    // If names are short (< 5 chars), allow 0 edits (exact match only)
+    // If names are medium (5-10 chars), allow 1 edit
+    // If names are long (> 10 chars), allow 2 edits
+    let allowedEdits = 0;
+    if (maxLength > 10) allowedEdits = 2;
+    else if (maxLength >= 5) allowedEdits = 1;
+
+    if (distance <= allowedEdits) {
+        console.log(`  Fuzzy Match: "${name1}" ~= "${name2}" (Dist: ${distance})`);
+        return true;
     }
 
     return false;
