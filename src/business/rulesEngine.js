@@ -96,15 +96,11 @@ function groupDesmembramentos(desmembramentos) {
         const key = `${normalizeVendorName(desm.vendor)}_${desm.pdvCode}`;
 
         if (groupMap.has(key)) {
-            // PDV já existe para este vendedor, somar valores
+            // Same vendor, PDV AND vencimento - sum values (rare case)
             const existing = groupMap.get(key);
             existing.value += desm.value;
-            // Manter o vencimento mais recente
-            if (desm.vencimento) {
-                existing.vencimento = desm.vencimento;
-            }
         } else {
-            // Novo PDV para este vendedor
+            // New combination of vendor + PDV + vencimento
             groupMap.set(key, {
                 vendor: desm.vendor,
                 pdvCode: desm.pdvCode,
@@ -116,7 +112,7 @@ function groupDesmembramentos(desmembramentos) {
     }
 
     const result = Array.from(groupMap.values());
-    console.log(`Desmembramentos agrupados: ${desmembramentos.length} → ${result.length} únicos`);
+    console.log(`Desmembramentos agrupados: ${desmembramentos.length} → ${result.length} únicos (por PDV + vencimento)`);
 
     return result;
 }
