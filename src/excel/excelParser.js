@@ -95,6 +95,35 @@ async function parseExcelDesmembramentos(filePath) {
 
         const desmembramentos = [];
 
+        // Find header row and column indices
+        const headerRow = jsonData[0];
+        const colMap = {
+            filial: -1,
+            vendor: -1,
+            pdvCode: -1,
+            value: -1,
+            vencimento: -1
+        };
+
+        headerRow.forEach((col, index) => {
+            if (!col) return;
+            const colName = col.toString().toLowerCase().trim();
+            if (colName.includes('filial')) colMap.filial = index;
+            else if (colName.includes('vendedor')) colMap.vendor = index;
+            else if (colName.includes('pdv') || colName.includes('código')) colMap.pdvCode = index;
+            else if (colName.includes('valor')) colMap.value = index;
+            else if (colName.includes('vencimento')) colMap.vencimento = index;
+        });
+
+        console.log('Mapeamento de colunas:', colMap);
+
+        // Fallback to default indices if not found (compatibility)
+        if (colMap.filial === -1) colMap.filial = 2;
+        if (colMap.vendor === -1) colMap.vendor = 3;
+        if (colMap.pdvCode === -1) colMap.pdvCode = 4;
+        if (colMap.value === -1) colMap.value = 5;
+        if (colMap.vencimento === -1) colMap.vencimento = 7;
+
         // Skip header row
         for (let i = 1; i < jsonData.length; i++) {
             const row = jsonData[i];
@@ -102,12 +131,12 @@ async function parseExcelDesmembramentos(filePath) {
             // Skip empty rows
             if (!row || row.length === 0) continue;
 
-            // Adjust column indices based on actual Excel structure
-            const filial = row[2]; // Column C - FILIAL
-            const vendor = row[3]; // Column D - Nome do vendedor
-            const pdvCode = row[4]; // Column E - Código PDV
-            const value = row[5]; // Column F - Valor
-            const vencimento = row[7]; // Column H - Vencimento
+            // Extract values using mapped indices
+            const filial = row[colMap.filial];
+            const vendor = row[colMap.vendor];
+            const pdvCode = row[colMap.pdvCode];
+            const value = row[colMap.value];
+            const vencimento = row[colMap.vencimento];
 
             // Extract DDD from filial
             let ddd = null;
@@ -137,11 +166,19 @@ async function parseExcelDesmembramentos(filePath) {
                     const date = XLSX.SSF.parse_date_code(vencimento);
                     vencimentoStr = `${String(date.d).padStart(2, '0')}/${String(date.m).padStart(2, '0')}/${date.y}`;
                 } else {
-                    vencimentoStr = vencimento.toString();
+                    vencimentoStr = vencimento.toString().trim();
                 }
+            } else {
+                // Try to find date in other columns if not found (heuristic)
+                // Sometimes date is in the last column
             }
 
             if (vendor && pdvCode && parsedValue > 0) {
+                // Log specific case for debugging
+                if (pdvCode.toString().includes('6443')) {
+                    console.log(`DEBUG PDV 6443: Vencimento original="${vencimento}" -> Parsed="${vencimentoStr}"`);
+                }
+
                 desmembramentos.push({
                     ddd,
                     vendor: vendor.toString().trim(),
