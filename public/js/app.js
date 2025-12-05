@@ -1,9 +1,6 @@
 // DOM Elements
 const uploadForm = document.getElementById('uploadForm');
-const excel42 = document.getElementById('excel42');
-const excel47 = document.getElementById('excel47');
-const excel61 = document.getElementById('excel61');
-const excel63 = document.getElementById('excel63');
+const excelVendas = document.getElementById('excelVendas');
 const excelDesmembramentos = document.getElementById('excelDesmembramentos');
 const startingNumber = document.getElementById('startingNumber');
 const periodInput = document.getElementById('period');
@@ -28,24 +25,29 @@ function initializePeriod() {
 
 // Handle file selection
 function handleFileSelect(input, infoId) {
-    const file = input.files[0];
+    const files = input.files;
     const infoElement = document.getElementById(infoId);
 
-    if (!file) {
+    if (!files || files.length === 0) {
         infoElement.textContent = '';
         return;
     }
 
-    // Validate file size
-    if (file.size > 10 * 1024 * 1024) {
-        alert('Arquivo muito grande! Tamanho máximo: 10MB');
-        input.value = '';
-        infoElement.textContent = '';
-        return;
+    let infoText = '';
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        // Validate file size
+        if (file.size > 10 * 1024 * 1024) {
+            alert(`Arquivo ${file.name} muito grande! Tamanho máximo: 10MB`);
+            input.value = '';
+            infoElement.textContent = '';
+            return;
+        }
+        infoText += `✓ ${file.name} (${formatFileSize(file.size)})<br>`;
     }
 
     // Show file info
-    infoElement.textContent = `✓ ${file.name} (${formatFileSize(file.size)})`;
+    infoElement.innerHTML = infoText;
     infoElement.style.color = '#10B981';
 }
 
@@ -92,9 +94,9 @@ uploadForm.addEventListener('submit', async (e) => {
     resultSection.style.display = 'none';
     errorSection.style.display = 'none';
 
-    // Validate that at least one DDD file is uploaded
-    if (!excel42.files[0] && !excel47.files[0] && !excel61.files[0] && !excel63.files[0]) {
-        showError('Por favor, envie pelo menos uma planilha de vendas (DDD 42, 47, 61 ou 63)!');
+    // Validate that at least one sales file is uploaded
+    if (!excelVendas.files || excelVendas.files.length === 0) {
+        showError('Por favor, envie pelo menos uma planilha de vendas!');
         return;
     }
 
@@ -118,10 +120,10 @@ uploadForm.addEventListener('submit', async (e) => {
     // Prepare form data
     const formData = new FormData();
 
-    if (excel42.files[0]) formData.append('excel42', excel42.files[0]);
-    if (excel47.files[0]) formData.append('excel47', excel47.files[0]);
-    if (excel61.files[0]) formData.append('excel61', excel61.files[0]);
-    if (excel63.files[0]) formData.append('excel63', excel63.files[0]);
+    // Append all sales files
+    for (let i = 0; i < excelVendas.files.length; i++) {
+        formData.append('excelVendas', excelVendas.files[i]);
+    }
 
     formData.append('excelDesmembramentos', excelDesmembramentos.files[0]);
     formData.append('startingNumber', startingNumber.value);
@@ -192,13 +194,10 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
 });
 
 // File input change handlers
-excel42.addEventListener('change', () => handleFileSelect(excel42, 'info42'));
-excel47.addEventListener('change', () => handleFileSelect(excel47, 'info47'));
-excel61.addEventListener('change', () => handleFileSelect(excel61, 'info61'));
-excel63.addEventListener('change', () => handleFileSelect(excel63, 'info63'));
+excelVendas.addEventListener('change', () => handleFileSelect(excelVendas, 'infoVendas'));
 excelDesmembramentos.addEventListener('change', () => handleFileSelect(excelDesmembramentos, 'infoDesmembramentos'));
 
 // Initialize
 initializePeriod();
 
-console.log('🚀 Sistema de Automação de Boletos v2.0 carregado!');
+console.log('🚀 Sistema de Automação de Boletos v2.1 carregado!');

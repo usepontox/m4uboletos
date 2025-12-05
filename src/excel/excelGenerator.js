@@ -53,7 +53,7 @@ async function generateExcel(data, period) {
         headerRow.fill = {
             type: 'pattern',
             pattern: 'solid',
-            fgColor: { argb: 'FF0088CC' } // M4U blue color
+            fgColor: { argb: 'FF000000' } // Black color to match template
         };
         headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
         headerRow.height = 20;

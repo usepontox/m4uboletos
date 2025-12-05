@@ -53,10 +53,7 @@ app.get('/api/health', (req, res) => {
 });
 
 app.post('/api/process', upload.fields([
-    { name: 'excel42', maxCount: 1 },
-    { name: 'excel47', maxCount: 1 },
-    { name: 'excel61', maxCount: 1 },
-    { name: 'excel63', maxCount: 1 },
+    { name: 'excelVendas', maxCount: 10 },
     { name: 'excelDesmembramentos', maxCount: 1 }
 ]), async (req, res) => {
     const uploadedFiles = [];
@@ -71,29 +68,37 @@ app.post('/api/process', upload.fields([
             });
         }
 
+        // Validate sales files
+        if (!req.files.excelVendas || req.files.excelVendas.length === 0) {
+            return res.status(400).json({
+                error: 'Por favor, envie pelo menos uma planilha de vendas'
+            });
+        }
+
         // Collect all uploaded DDD files
         const excelFiles = [];
 
-        if (req.files.excel42) {
-            excelFiles.push({ ddd: 42, path: req.files.excel42[0].path });
-            uploadedFiles.push(req.files.excel42[0].path);
-        }
-        if (req.files.excel47) {
-            excelFiles.push({ ddd: 47, path: req.files.excel47[0].path });
-            uploadedFiles.push(req.files.excel47[0].path);
-        }
-        if (req.files.excel61) {
-            excelFiles.push({ ddd: 61, path: req.files.excel61[0].path });
-            uploadedFiles.push(req.files.excel61[0].path);
-        }
-        if (req.files.excel63) {
-            excelFiles.push({ ddd: 63, path: req.files.excel63[0].path });
-            uploadedFiles.push(req.files.excel63[0].path);
+        for (const file of req.files.excelVendas) {
+            uploadedFiles.push(file.path);
+
+            // Identify DDD from filename
+            let ddd = null;
+            if (file.originalname.includes('42')) ddd = 42;
+            else if (file.originalname.includes('47')) ddd = 47;
+            else if (file.originalname.includes('61')) ddd = 61;
+            else if (file.originalname.includes('63')) ddd = 63;
+
+            if (ddd) {
+                console.log(`Arquivo identificado: ${file.originalname} -> DDD ${ddd}`);
+                excelFiles.push({ ddd: ddd, path: file.path });
+            } else {
+                console.warn(`AVISO: Não foi possível identificar o DDD do arquivo: ${file.originalname}`);
+            }
         }
 
         if (excelFiles.length === 0) {
             return res.status(400).json({
-                error: 'Por favor, envie pelo menos uma planilha de vendas (DDD 42, 47, 61 ou 63)'
+                error: 'Não foi possível identificar o DDD em nenhum dos arquivos enviados. Certifique-se que os nomes dos arquivos contêm o número do DDD (ex: "42.xls").'
             });
         }
 
