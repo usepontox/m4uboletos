@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Automação de Boletos</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🎯 Sistema de Automação de Boletos</h1>
+            <p class="subtitle">Processamento automático com OCR - Estrutural</p>
+        </header>
+
+        <main class="main-content">
+            <form id="uploadForm" class="upload-form">
+                <!-- Sales Image Upload -->
+                <div class="upload-section">
+                    <h2>📊 1. Planilha de Vendas</h2>
+                    <div class="upload-zone" id="salesUploadZone">
+                        <input type="file" id="salesImage" name="salesImage" accept="image/*" required>
+                        <div class="upload-placeholder">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            <p>Clique ou arraste a imagem da planilha de vendas</p>
+                            <span class="file-types">PNG, JPG, GIF até 10MB</span>
+                        </div>
+                        <div class="preview" id="salesPreview"></div>
+                    </div>
+                </div>
+
+                <!-- Desmembramentos Image Upload -->
+                <div class="upload-section">
+                    <h2>📸 2. Desmembramentos</h2>
+                    <div class="upload-zone" id="desmembramentosUploadZone">
+                        <input type="file" id="desmembramentosImage" name="desmembramentosImage" accept="image/*" required>
+                        <div class="upload-placeholder">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            <p>Clique ou arraste a imagem dos desmembramentos</p>
+                            <span class="file-types">PNG, JPG, GIF até 10MB</span>
+                        </div>
+                        <div class="preview" id="desmembramentosPreview"></div>
+                    </div>
+                </div>
+
+                <!-- Configuration Section -->
+                <div class="config-section">
+                    <h2>⚙️ 3. Configurações</h2>
+                    <div class="config-grid">
+                        <div class="input-group">
+                            <label for="startingNumber">Número Inicial</label>
+                            <input type="number" id="startingNumber" name="startingNumber" min="1" required placeholder="Ex: 213573">
+                        </div>
+                        <div class="input-group">
+                            <label for="date">Data</label>
+                            <input type="text" id="date" name="date" required placeholder="DD/MM/YYYY">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <span class="btn-text">🚀 Processar e Gerar Excel</span>
+                    <span class="btn-loader" style="display: none;">
+                        <svg class="spinner" viewBox="0 0 50 50">
+                            <circle class="path" cx="25" cy="25" r="20" fill="none" stroke-width="5"></circle>
+                        </svg>
+                        Processando...
+                    </span>
+                </button>
+            </form>
+
+            <!-- Progress Section -->
+            <div class="progress-section" id="progressSection" style="display: none;">
+                <h3>Processamento em andamento...</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p class="progress-text" id="progressText">Iniciando...</p>
+            </div>
+
+            <!-- Result Section -->
+            <div class="result-section" id="resultSection" style="display: none;">
+                <div class="success-message">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    <h3>✅ Processamento Concluído!</h3>
+                    <p>Seu arquivo Excel está pronto para download.</p>
+                    <button class="download-btn" id="downloadBtn">📥 Baixar Excel</button>
+                </div>
+            </div>
+
+            <!-- Error Section -->
+            <div class="error-section" id="errorSection" style="display: none;">
+                <div class="error-message">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <h3>❌ Erro no Processamento</h3>
+                    <p id="errorText"></p>
+                    <button class="retry-btn" onclick="location.reload()">🔄 Tentar Novamente</button>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>Sistema de Automação de Boletos Estrutural v1.0</p>
+            <p class="footer-note">⏰ Horário de operação: 09:00 - 13:00</p>
+        </footer>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

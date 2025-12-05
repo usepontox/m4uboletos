@@ -1,0 +1,184 @@
+<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+  <Title>Planilha</Title>
+  <Subject>M4U</Subject>
+  <Author>M4U</Author>
+  <Created>2025-12-05T11:31:17Z</Created>
+  <Manager>M4U</Manager>
+  <Company>M4U</Company>
+  <Version>16.00</Version>
+ </DocumentProperties>
+ <OfficeDocumentSettings xmlns="urn:schemas-microsoft-com:office:office">
+  <AllowPNG/>
+ </OfficeDocumentSettings>
+ <ExcelWorkbook xmlns="urn:schemas-microsoft-com:office:excel">
+  <WindowHeight>11145</WindowHeight>
+  <WindowWidth>19200</WindowWidth>
+  <WindowTopX>32767</WindowTopX>
+  <WindowTopY>32767</WindowTopY>
+  <ProtectStructure>False</ProtectStructure>
+  <ProtectWindows>False</ProtectWindows>
+ </ExcelWorkbook>
+ <Styles>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Vertical="Bottom"/>
+   <NumberFormat/>
+   <Protection/>
+  </Style>
+  <Style ss:ID="s62">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Bottom"/>
+   <Font ss:FontName="Arial" ss:Bold="1"/>
+   <NumberFormat/>
+   <Protection/>
+  </Style>
+  <Style ss:ID="s63">
+   <Alignment ss:Horizontal="Right" ss:Vertical="Bottom"/>
+   <NumberFormat ss:Format="#,##0"/>
+   <Protection/>
+  </Style>
+  <Style ss:ID="s64">
+   <Alignment ss:Horizontal="Right" ss:Vertical="Bottom"/>
+   <NumberFormat ss:Format="Standard"/>
+   <Protection/>
+  </Style>
+  <Style ss:ID="s65">
+   <Alignment ss:Horizontal="Right" ss:Vertical="Bottom"/>
+   <Font ss:FontName="Arial" ss:Bold="1"/>
+   <NumberFormat/>
+   <Protection/>
+  </Style>
+ </Styles>
+ <Worksheet ss:Name="Sheet1">
+  <Table ss:ExpandedColumnCount="8" ss:ExpandedRowCount="12" x:FullColumns="1"
+   x:FullRows="1" ss:DefaultRowHeight="15">
+   <Column ss:AutoFitWidth="0" ss:Width="99.75" ss:Span="6"/>
+   <Row>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">Vendedor</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">Qtd. de Venda(s)</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">Valor Líquido Venda(s) (R$)</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">Valor Bruto Venda(s) (R$)</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">Qtd. de Cobrança(s)</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">Valor Líquido Cobrança(s) (R$)</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">Valor Bruto Cobrança(s) (R$)</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">ADENILSON PENTEADO</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">14</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">3451.5</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">3501.5</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">ADILSON APARECIDO RIBEIRO</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">14</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">675</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">675</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">ALESSANDRO BORGES</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">11</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">564.5</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">564.5</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">EDER PEREIRA</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">20</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1442</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1452</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">EDILEIA FERREIRA BORGES</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">15</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">731</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">731</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">GEFERSON SOUZA LEMES</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">15</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">922</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">932</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">RAFAEL AQUILES LACERDA</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">15</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1976.5</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2006.5</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">RAYLAN LEITE RODRIGUES</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">14</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1385.5</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1385.5</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">SERGIO NEI DE SOUZA</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">13</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1729.5</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1809.5</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="String">THIONAJARA ALVES</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">18</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1494</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1494</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s65"><Data ss:Type="String">Total:</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">149</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">14371.5</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">14551.5</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">0</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+  </Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Header x:Margin="0.4921259845"/>
+    <Footer x:Margin="0.4921259845"/>
+    <PageMargins x:Bottom="0.984251969" x:Left="0.78740157499999996"
+     x:Right="0.78740157499999996" x:Top="0.984251969"/>
+   </PageSetup>
+   <Selected/>
+   <ProtectObjects>False</ProtectObjects>
+   <ProtectScenarios>False</ProtectScenarios>
+  </WorksheetOptions>
+ </Worksheet>
+ <x:ExcelWorkbook/>
+</Workbook>
