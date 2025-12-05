@@ -74,6 +74,89 @@ body {
     color: var(--text-light);
 }
 
+.upload-note {
+    margin-top: 0.75rem;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+/* DDD Grid for Excel Uploads */
+.ddd-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.excel-upload-box {
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.excel-upload-box:hover {
+    border-color: var(--secondary);
+    background: rgba(6, 182, 212, 0.1);
+    transform: translateY(-2px);
+}
+
+.excel-upload-box.full-width {
+    grid-column: 1 / -1;
+}
+
+.excel-upload-box label {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: var(--secondary);
+}
+
+.excel-upload-box input[type="file"] {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px dashed rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-light);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.excel-upload-box input[type="file"]:hover {
+    border-color: var(--secondary);
+    background: rgba(6, 182, 212, 0.1);
+}
+
+.excel-upload-box input[type="file"]::file-selector-button {
+    padding: 0.5rem 1rem;
+    background: var(--secondary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    margin-right: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.excel-upload-box input[type="file"]::file-selector-button:hover {
+    background: var(--primary);
+}
+
+.file-info {
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--success);
+    min-height: 1.2rem;
+}
+
 .upload-zone {
     position: relative;
     border: 3px dashed rgba(255, 255, 255, 0.3);
@@ -247,7 +330,9 @@ body {
 }
 
 @keyframes rotate {
-    100% { transform: rotate(360deg); }
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 @keyframes dash {
@@ -255,10 +340,12 @@ body {
         stroke-dasharray: 1, 150;
         stroke-dashoffset: 0;
     }
+
     50% {
         stroke-dasharray: 90, 150;
         stroke-dashoffset: -35;
     }
+
     100% {
         stroke-dasharray: 90, 150;
         stroke-dashoffset: -124;
@@ -297,8 +384,15 @@ body {
 }
 
 @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
 }
 
 .progress-text {
@@ -420,6 +514,7 @@ body {
         opacity: 0;
         transform: translateY(-20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -431,6 +526,7 @@ body {
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -442,11 +538,11 @@ body {
     .header h1 {
         font-size: 2rem;
     }
-    
+
     .main-content {
         padding: 1.5rem;
     }
-    
+
     .config-grid {
         grid-template-columns: 1fr;
     }

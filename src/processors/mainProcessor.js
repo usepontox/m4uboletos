@@ -1,41 +1,42 @@
-const { extractTextFromImage, parseSalesReport, parseDesmembramentos } = require('../ocr/imageProcessor');
+const { parseExcelSales, parseExcelDesmembramentos } = require('../excel/excelParser');
 const { processBusinessRules, generateSequentialNumbers } = require('../business/rulesEngine');
 const { generateExcel } = require('../excel/excelGenerator');
 
 /**
  * Main processor that orchestrates the entire workflow
  */
-async function processImages({ salesImagePath, desmembramentosImagePath, startingNumber, date }) {
+async function processExcelFiles({ excelFiles, desmembramentosPath, startingNumber, period }) {
     try {
         console.log('=== Iniciando processamento ===');
 
-        // Step 1: Extract text from images using OCR
-        console.log('Passo 1: Extraindo texto das imagens...');
-        const salesText = await extractTextFromImage(salesImagePath);
-        const desmembramentosText = await extractTextFromImage(desmembramentosImagePath);
+        // Step 1: Parse all Excel files
+        console.log('Passo 1: Lendo arquivos Excel...');
+        let allSalesData = [];
 
-        // Step 2: Parse extracted text into structured data
-        console.log('Passo 2: Parseando dados...');
-        const salesData = parseSalesReport(salesText);
-        const desmembramentos = parseDesmembramentos(desmembramentosText);
-
-        if (salesData.length === 0) {
-            throw new Error('Nenhum dado de vendas encontrado na imagem. Verifique a qualidade da imagem.');
+        for (const { ddd, path } of excelFiles) {
+            const salesData = await parseExcelSales(path, ddd);
+            allSalesData = allSalesData.concat(salesData);
         }
 
-        console.log(`Dados extraídos: ${salesData.length} vendas, ${desmembramentos.length} desmembramentos`);
+        const desmembramentos = await parseExcelDesmembramentos(desmembramentosPath);
 
-        // Step 3: Apply business rules
-        console.log('Passo 3: Aplicando regras de negócio...');
-        const processedData = processBusinessRules(salesData, desmembramentos, date);
+        if (allSalesData.length === 0) {
+            throw new Error('Nenhum dado de vendas encontrado nas planilhas.');
+        }
 
-        // Step 4: Generate sequential numbers
-        console.log('Passo 4: Gerando numeração sequencial...');
+        console.log(`Dados extraídos: ${allSalesData.length} vendas, ${desmembramentos.length} desmembramentos`);
+
+        // Step 2: Apply business rules
+        console.log('Passo 2: Aplicando regras de negócio...');
+        const processedData = processBusinessRules(allSalesData, desmembramentos, period);
+
+        // Step 3: Generate sequential numbers
+        console.log('Passo 3: Gerando numeração sequencial...');
         const numberedData = generateSequentialNumbers(processedData, startingNumber);
 
-        // Step 5: Generate Excel file
-        console.log('Passo 5: Gerando arquivo Excel...');
-        const excelBuffer = await generateExcel(numberedData, date);
+        // Step 4: Generate Excel file
+        console.log('Passo 4: Gerando arquivo Excel...');
+        const excelBuffer = await generateExcel(numberedData, period);
 
         console.log('=== Processamento concluído com sucesso! ===');
         return excelBuffer;
@@ -47,5 +48,5 @@ async function processImages({ salesImagePath, desmembramentosImagePath, startin
 }
 
 module.exports = {
-    processImages
+    processExcelFiles
 };

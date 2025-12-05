@@ -3,7 +3,7 @@ const multer = require('multer');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs').promises;
-const { processImages } = require('./src/processors/mainProcessor');
+const { processExcelFiles } = require('./src/processors/mainProcessor');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -36,14 +36,13 @@ const upload = multer({
         fileSize: 10 * 1024 * 1024 // 10MB limit
     },
     fileFilter: (req, file, cb) => {
-        const allowedTypes = /jpeg|jpg|png|gif|bmp/;
+        const allowedTypes = /xls|xlsx/;
         const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-        const mimetype = allowedTypes.test(file.mimetype);
 
-        if (mimetype && extname) {
+        if (extname) {
             return cb(null, true);
         } else {
-            cb(new Error('Apenas imagens são permitidas!'));
+            cb(new Error('Apenas arquivos Excel são permitidos!'));
         }
     }
 });
@@ -54,16 +53,47 @@ app.get('/api/health', (req, res) => {
 });
 
 app.post('/api/process', upload.fields([
-    { name: 'salesImage', maxCount: 1 },
-    { name: 'desmembramentosImage', maxCount: 1 }
+    { name: 'excel42', maxCount: 1 },
+    { name: 'excel47', maxCount: 1 },
+    { name: 'excel61', maxCount: 1 },
+    { name: 'excel63', maxCount: 1 },
+    { name: 'excelDesmembramentos', maxCount: 1 }
 ]), async (req, res) => {
+    const uploadedFiles = [];
+
     try {
         console.log('Recebendo requisição de processamento...');
 
-        // Validate files
-        if (!req.files || !req.files.salesImage || !req.files.desmembramentosImage) {
+        // Validate desmembramentos file
+        if (!req.files || !req.files.excelDesmembramentos) {
             return res.status(400).json({
-                error: 'Por favor, envie ambas as imagens (vendas e desmembramentos)'
+                error: 'Por favor, envie a planilha de desmembramentos'
+            });
+        }
+
+        // Collect all uploaded DDD files
+        const excelFiles = [];
+
+        if (req.files.excel42) {
+            excelFiles.push({ ddd: 42, path: req.files.excel42[0].path });
+            uploadedFiles.push(req.files.excel42[0].path);
+        }
+        if (req.files.excel47) {
+            excelFiles.push({ ddd: 47, path: req.files.excel47[0].path });
+            uploadedFiles.push(req.files.excel47[0].path);
+        }
+        if (req.files.excel61) {
+            excelFiles.push({ ddd: 61, path: req.files.excel61[0].path });
+            uploadedFiles.push(req.files.excel61[0].path);
+        }
+        if (req.files.excel63) {
+            excelFiles.push({ ddd: 63, path: req.files.excel63[0].path });
+            uploadedFiles.push(req.files.excel63[0].path);
+        }
+
+        if (excelFiles.length === 0) {
+            return res.status(400).json({
+                error: 'Por favor, envie pelo menos uma planilha de vendas (DDD 42, 47, 61 ou 63)'
             });
         }
 
@@ -75,35 +105,36 @@ app.post('/api/process', upload.fields([
             });
         }
 
-        // Validate date
-        const date = req.body.date;
-        if (!date) {
+        // Validate period
+        const period = req.body.period;
+        if (!period) {
             return res.status(400).json({
-                error: 'Data não fornecida'
+                error: 'Período não fornecido'
             });
         }
 
-        const salesImagePath = req.files.salesImage[0].path;
-        const desmembramentosImagePath = req.files.desmembramentosImage[0].path;
+        const desmembramentosPath = req.files.excelDesmembramentos[0].path;
+        uploadedFiles.push(desmembramentosPath);
 
-        console.log('Processando imagens...');
-        console.log('Vendas:', salesImagePath);
-        console.log('Desmembramentos:', desmembramentosImagePath);
+        console.log('Processando planilhas Excel...');
+        console.log(`DDDs recebidos: ${excelFiles.map(f => f.ddd).join(', ')}`);
+        console.log('Desmembramentos:', desmembramentosPath);
 
-        // Process images and generate Excel
-        const excelBuffer = await processImages({
-            salesImagePath,
-            desmembramentosImagePath,
+        // Process Excel files and generate output
+        const excelBuffer = await processExcelFiles({
+            excelFiles,
+            desmembramentosPath,
             startingNumber,
-            date
+            period
         });
 
         // Clean up uploaded files
-        await fs.unlink(salesImagePath);
-        await fs.unlink(desmembramentosImagePath);
+        for (const filePath of uploadedFiles) {
+            await fs.unlink(filePath).catch(() => { });
+        }
 
         // Send Excel file
-        const filename = `boletos_${date.replace(/\//g, '-')}.xlsx`;
+        const filename = `boletos_${period.replace(/[^\d]/g, '_')}.xlsx`;
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
         res.send(excelBuffer);
@@ -114,17 +145,12 @@ app.post('/api/process', upload.fields([
         console.error('Erro no processamento:', error);
 
         // Clean up files on error
-        if (req.files) {
-            if (req.files.salesImage) {
-                await fs.unlink(req.files.salesImage[0].path).catch(() => { });
-            }
-            if (req.files.desmembramentosImage) {
-                await fs.unlink(req.files.desmembramentosImage[0].path).catch(() => { });
-            }
+        for (const filePath of uploadedFiles) {
+            await fs.unlink(filePath).catch(() => { });
         }
 
         res.status(500).json({
-            error: 'Erro ao processar as imagens',
+            error: 'Erro ao processar as planilhas',
             details: error.message
         });
     }
@@ -133,6 +159,6 @@ app.post('/api/process', upload.fields([
 // Start server
 app.listen(PORT, () => {
     console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
-    console.log(`📊 Sistema de Automação de Boletos`);
+    console.log(`📊 Sistema de Automação de Boletos v2.0`);
     console.log(`⏰ Iniciado em: ${new Date().toLocaleString('pt-BR')}`);
 });

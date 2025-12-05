@@ -3,67 +3,68 @@ const ExcelJS = require('exceljs');
 /**
  * Generates Excel file with formatted boletos data
  */
-async function generateExcel(data, date) {
+async function generateExcel(data, period) {
     console.log('Gerando arquivo Excel...');
 
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet(`Boletos ${date}`);
+    const worksheet = workbook.addWorksheet('Boletos');
 
-    // Set column widths
-    worksheet.columns = [
-        { key: 'numero', width: 12 },
-        { key: 'vendedor', width: 30 },
-        { key: 'valor', width: 15 },
-        { key: 'dataVenda', width: 15 },
-        { key: 'vencimento', width: 15 },
-        { key: 'pdvCode', width: 12 }
-    ];
+    // Add title with period
+    worksheet.mergeCells('A1:E1');
+    const titleCell = worksheet.getCell('A1');
+    titleCell.value = `BOLETO ESTRUTURAL - PERÍODO ${period}`;
+    titleCell.font = { bold: true, size: 14 };
+    titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+    titleCell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFE0E0E0' }
+    };
+    worksheet.getRow(1).height = 30;
 
-    // Add header
+    // Add header row
     const headerRow = worksheet.addRow([
         'Nº Número',
         'Vendedor',
         'Valor R$',
-        'Data da Venda',
         'Vencimento',
         'Código PDV'
     ]);
 
     // Style header
-    headerRow.font = { bold: true, size: 12 };
+    headerRow.font = { bold: true, size: 11 };
     headerRow.fill = {
         type: 'pattern',
         pattern: 'solid',
         fgColor: { argb: 'FF4472C4' }
     };
     headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+    headerRow.height = 20;
 
-    // Add title with date
-    worksheet.insertRow(1, [`BOLETO ESTRUTURAL - PERÍODO ${date}`]);
-    worksheet.mergeCells('A1:F1');
-    const titleRow = worksheet.getRow(1);
-    titleRow.font = { bold: true, size: 14 };
-    titleRow.alignment = { horizontal: 'center' };
-    titleRow.height = 25;
+    // Set column widths
+    worksheet.getColumn(1).width = 12;
+    worksheet.getColumn(2).width = 35;
+    worksheet.getColumn(3).width = 15;
+    worksheet.getColumn(4).width = 15;
+    worksheet.getColumn(5).width = 15;
 
     // Add data rows
     data.forEach((item) => {
-        const row = worksheet.addRow({
-            numero: item.numero,
-            vendedor: item.vendor,
-            valor: item.finalValue,
-            dataVenda: date,
-            vencimento: item.vencimento || date,
-            pdvCode: item.pdvCode || ''
-        });
+        const row = worksheet.addRow([
+            item.numero,
+            item.vendor,
+            item.finalValue,
+            item.vencimento || '',
+            item.pdvCode || ''
+        ]);
 
         // Format currency
-        row.getCell('valor').numFmt = 'R$ #,##0.00';
+        row.getCell(3).numFmt = 'R$ #,##0.00';
 
         // Highlight PDV codes in red
         if (item.isDesmembramento && item.pdvCode) {
-            row.getCell('pdvCode').font = { color: { argb: 'FFFF0000' }, bold: true };
-            row.getCell('vendedor').font = { italic: true };
+            row.getCell(5).font = { color: { argb: 'FFFF0000' }, bold: true };
+            row.getCell(2).font = { italic: true };
         }
 
         // Add border to all cells
@@ -76,17 +77,6 @@ async function generateExcel(data, date) {
             };
             cell.alignment = { vertical: 'middle' };
         });
-    });
-
-    // Auto-fit columns
-    worksheet.columns.forEach((column) => {
-        if (column.values) {
-            const maxLength = column.values.reduce((max, val) => {
-                const length = val ? val.toString().length : 0;
-                return Math.max(max, length);
-            }, 0);
-            column.width = Math.min(maxLength + 2, 50);
-        }
     });
 
     // Generate buffer

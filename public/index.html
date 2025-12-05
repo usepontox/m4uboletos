@@ -1,54 +1,65 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Automação de Boletos</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
+
 <body>
     <div class="container">
         <header class="header">
             <h1>🎯 Sistema de Automação de Boletos</h1>
-            <p class="subtitle">Processamento automático com OCR - Estrutural</p>
+            <p class="subtitle">Processamento automático de planilhas Excel - Estrutural</p>
         </header>
 
         <main class="main-content">
             <form id="uploadForm" class="upload-form">
-                <!-- Sales Image Upload -->
+
+                <!-- Sales Excel Uploads by DDD -->
                 <div class="upload-section">
-                    <h2>📊 1. Planilha de Vendas</h2>
-                    <div class="upload-zone" id="salesUploadZone">
-                        <input type="file" id="salesImage" name="salesImage" accept="image/*" required>
-                        <div class="upload-placeholder">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="17 8 12 3 7 8"></polyline>
-                                <line x1="12" y1="3" x2="12" y2="15"></line>
-                            </svg>
-                            <p>Clique ou arraste a imagem da planilha de vendas</p>
-                            <span class="file-types">PNG, JPG, GIF até 10MB</span>
+                    <h2>📊 1. Planilhas de Vendas por DDD</h2>
+
+                    <div class="ddd-grid">
+                        <div class="excel-upload-box">
+                            <label for="excel42">DDD 42</label>
+                            <input type="file" id="excel42" name="excel42" accept=".xls,.xlsx">
+                            <div class="file-info" id="info42"></div>
                         </div>
-                        <div class="preview" id="salesPreview"></div>
+
+                        <div class="excel-upload-box">
+                            <label for="excel47">DDD 47</label>
+                            <input type="file" id="excel47" name="excel47" accept=".xls,.xlsx">
+                            <div class="file-info" id="info47"></div>
+                        </div>
+
+                        <div class="excel-upload-box">
+                            <label for="excel61">DDD 61</label>
+                            <input type="file" id="excel61" name="excel61" accept=".xls,.xlsx">
+                            <div class="file-info" id="info61"></div>
+                        </div>
+
+                        <div class="excel-upload-box">
+                            <label for="excel63">DDD 63</label>
+                            <input type="file" id="excel63" name="excel63" accept=".xls,.xlsx">
+                            <div class="file-info" id="info63"></div>
+                        </div>
                     </div>
+                    <p class="upload-note">📝 Faça upload das planilhas Excel de vendas para cada DDD</p>
                 </div>
 
-                <!-- Desmembramentos Image Upload -->
+                <!-- Desmembramentos Upload -->
                 <div class="upload-section">
-                    <h2>📸 2. Desmembramentos</h2>
-                    <div class="upload-zone" id="desmembramentosUploadZone">
-                        <input type="file" id="desmembramentosImage" name="desmembramentosImage" accept="image/*" required>
-                        <div class="upload-placeholder">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="17 8 12 3 7 8"></polyline>
-                                <line x1="12" y1="3" x2="12" y2="15"></line>
-                            </svg>
-                            <p>Clique ou arraste a imagem dos desmembramentos</p>
-                            <span class="file-types">PNG, JPG, GIF até 10MB</span>
-                        </div>
-                        <div class="preview" id="desmembramentosPreview"></div>
+                    <h2>📋 2. Planilha de Desmembramentos</h2>
+                    <div class="excel-upload-box full-width">
+                        <label for="excelDesmembramentos">Desmembramentos</label>
+                        <input type="file" id="excelDesmembramentos" name="excelDesmembramentos" accept=".xls,.xlsx"
+                            required>
+                        <div class="file-info" id="infoDesmembramentos"></div>
                     </div>
+                    <p class="upload-note">📝 Arquivo Excel com todos os desmembramentos</p>
                 </div>
 
                 <!-- Configuration Section -->
@@ -57,11 +68,14 @@
                     <div class="config-grid">
                         <div class="input-group">
                             <label for="startingNumber">Número Inicial</label>
-                            <input type="number" id="startingNumber" name="startingNumber" min="1" required placeholder="Ex: 213573">
+                            <input type="number" id="startingNumber" name="startingNumber" min="1" required
+                                placeholder="Ex: 213573">
                         </div>
                         <div class="input-group">
-                            <label for="date">Data</label>
-                            <input type="text" id="date" name="date" required placeholder="DD/MM/YYYY">
+                            <label for="period">Período</label>
+                            <input type="text" id="period" name="period" required
+                                placeholder="DD.MM.AA (00:00) A DD.MM.AA (23:59)">
+                            <small class="input-hint">Exemplo: 18.11 (00:00) A 18.11 (23:59)</small>
                         </div>
                     </div>
                 </div>
@@ -90,7 +104,8 @@
             <!-- Result Section -->
             <div class="result-section" id="resultSection" style="display: none;">
                 <div class="success-message">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
                         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                         <polyline points="22 4 12 14.01 9 11.01"></polyline>
                     </svg>
@@ -103,7 +118,8 @@
             <!-- Error Section -->
             <div class="error-section" id="errorSection" style="display: none;">
                 <div class="error-message">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"></circle>
                         <line x1="12" y1="8" x2="12" y2="12"></line>
                         <line x1="12" y1="16" x2="12.01" y2="16"></line>
@@ -116,11 +132,12 @@
         </main>
 
         <footer class="footer">
-            <p>Sistema de Automação de Boletos Estrutural v1.0</p>
+            <p>Sistema de Automação de Boletos Estrutural v2.0</p>
             <p class="footer-note">⏰ Horário de operação: 09:00 - 13:00</p>
         </footer>
     </div>
 
     <script src="js/app.js"></script>
 </body>
+
 </html>

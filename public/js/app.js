@@ -1,13 +1,12 @@
 // DOM Elements
 const uploadForm = document.getElementById('uploadForm');
-const salesImage = document.getElementById('salesImage');
-const desmembramentosImage = document.getElementById('desmembramentosImage');
-const salesUploadZone = document.getElementById('salesUploadZone');
-const desmembramentosUploadZone = document.getElementById('desmembramentosUploadZone');
-const salesPreview = document.getElementById('salesPreview');
-const desmembramentosPreview = document.getElementById('desmembramentosPreview');
+const excel42 = document.getElementById('excel42');
+const excel47 = document.getElementById('excel47');
+const excel61 = document.getElementById('excel61');
+const excel63 = document.getElementById('excel63');
+const excelDesmembramentos = document.getElementById('excelDesmembramentos');
 const startingNumber = document.getElementById('startingNumber');
-const dateInput = document.getElementById('date');
+const periodInput = document.getElementById('period');
 const submitBtn = document.getElementById('submitBtn');
 const progressSection = document.getElementById('progressSection');
 const progressFill = document.getElementById('progressFill');
@@ -18,74 +17,36 @@ const errorText = document.getElementById('errorText');
 
 let excelBlob = null;
 
-// Initialize date with current date
-function initializeDate() {
+// Initialize period with current date
+function initializePeriod() {
     const today = new Date();
     const day = String(today.getDate()).padStart(2, '0');
     const month = String(today.getMonth() + 1).padStart(2, '0');
-    const year = today.getFullYear();
-    dateInput.value = `${day}/${month}/${year}`;
-}
-
-// Setup drag and drop for upload zones
-function setupDragAndDrop(uploadZone, fileInput) {
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        uploadZone.addEventListener(eventName, preventDefaults, false);
-    });
-
-    function preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
-
-    ['dragenter', 'dragover'].forEach(eventName => {
-        uploadZone.addEventListener(eventName, () => {
-            uploadZone.classList.add('dragover');
-        }, false);
-    });
-
-    ['dragleave', 'drop'].forEach(eventName => {
-        uploadZone.addEventListener(eventName, () => {
-            uploadZone.classList.remove('dragover');
-        }, false);
-    });
-
-    uploadZone.addEventListener('drop', (e) => {
-        const dt = e.dataTransfer;
-        const files = dt.files;
-        if (files.length > 0) {
-            fileInput.files = files;
-            handleFileSelect(fileInput);
-        }
-    }, false);
+    const year = String(today.getFullYear()).slice(-2);
+    periodInput.value = `${day}.${month}.${year} (00:00) A ${day}.${month}.${year} (23:59)`;
 }
 
 // Handle file selection
-function handleFileSelect(input) {
+function handleFileSelect(input, infoId) {
     const file = input.files[0];
-    if (!file) return;
+    const infoElement = document.getElementById(infoId);
 
-    const previewElement = input.id === 'salesImage' ? salesPreview : desmembramentosPreview;
+    if (!file) {
+        infoElement.textContent = '';
+        return;
+    }
 
     // Validate file size
     if (file.size > 10 * 1024 * 1024) {
         alert('Arquivo muito grande! Tamanho máximo: 10MB');
         input.value = '';
+        infoElement.textContent = '';
         return;
     }
 
-    // Show preview
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        previewElement.innerHTML = `
-            <img src="${e.target.result}" alt="Preview">
-            <div class="preview-info">
-                📎 ${file.name} (${formatFileSize(file.size)})
-            </div>
-        `;
-        previewElement.classList.add('active');
-    };
-    reader.readAsDataURL(file);
+    // Show file info
+    infoElement.textContent = `✓ ${file.name} (${formatFileSize(file.size)})`;
+    infoElement.style.color = '#10B981';
 }
 
 // Format file size
@@ -131,28 +92,40 @@ uploadForm.addEventListener('submit', async (e) => {
     resultSection.style.display = 'none';
     errorSection.style.display = 'none';
 
-    // Validate inputs
-    if (!salesImage.files[0] || !desmembramentosImage.files[0]) {
-        showError('Por favor, envie ambas as imagens!');
+    // Validate that at least one DDD file is uploaded
+    if (!excel42.files[0] && !excel47.files[0] && !excel61.files[0] && !excel63.files[0]) {
+        showError('Por favor, envie pelo menos uma planilha de vendas (DDD 42, 47, 61 ou 63)!');
         return;
     }
 
+    // Validate desmembramentos
+    if (!excelDesmembramentos.files[0]) {
+        showError('Por favor, envie a planilha de desmembramentos!');
+        return;
+    }
+
+    // Validate inputs
     if (!startingNumber.value || parseInt(startingNumber.value) < 1) {
         showError('Por favor, insira um número inicial válido!');
         return;
     }
 
-    if (!dateInput.value) {
-        showError('Por favor, insira uma data válida!');
+    if (!periodInput.value) {
+        showError('Por favor, insira um período válido!');
         return;
     }
 
     // Prepare form data
     const formData = new FormData();
-    formData.append('salesImage', salesImage.files[0]);
-    formData.append('desmembramentosImage', desmembramentosImage.files[0]);
+
+    if (excel42.files[0]) formData.append('excel42', excel42.files[0]);
+    if (excel47.files[0]) formData.append('excel47', excel47.files[0]);
+    if (excel61.files[0]) formData.append('excel61', excel61.files[0]);
+    if (excel63.files[0]) formData.append('excel63', excel63.files[0]);
+
+    formData.append('excelDesmembramentos', excelDesmembramentos.files[0]);
     formData.append('startingNumber', startingNumber.value);
-    formData.append('date', dateInput.value);
+    formData.append('period', periodInput.value);
 
     // Disable submit button
     submitBtn.disabled = true;
@@ -161,7 +134,7 @@ uploadForm.addEventListener('submit', async (e) => {
 
     try {
         // Show progress
-        showProgress('Enviando imagens...', 10);
+        showProgress('Enviando planilhas...', 10);
 
         // Send request
         const response = await fetch('/api/process', {
@@ -169,7 +142,7 @@ uploadForm.addEventListener('submit', async (e) => {
             body: formData
         });
 
-        showProgress('Processando OCR...', 40);
+        showProgress('Processando dados...', 50);
 
         if (!response.ok) {
             const error = await response.json();
@@ -195,7 +168,7 @@ uploadForm.addEventListener('submit', async (e) => {
     } catch (error) {
         console.error('Erro:', error);
         hideProgress();
-        showError(error.message || 'Erro ao processar as imagens. Verifique a qualidade das imagens e tente novamente.');
+        showError(error.message || 'Erro ao processar as planilhas. Tente novamente.');
     } finally {
         // Re-enable submit button
         submitBtn.disabled = false;
@@ -211,7 +184,7 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
     const url = window.URL.createObjectURL(excelBlob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `boletos_${dateInput.value.replace(/\//g, '-')}.xlsx`;
+    a.download = `boletos_${periodInput.value.replace(/[^\d]/g, '_')}.xlsx`;
     document.body.appendChild(a);
     a.click();
     window.URL.revokeObjectURL(url);
@@ -219,12 +192,13 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
 });
 
 // File input change handlers
-salesImage.addEventListener('change', () => handleFileSelect(salesImage));
-desmembramentosImage.addEventListener('change', () => handleFileSelect(desmembramentosImage));
+excel42.addEventListener('change', () => handleFileSelect(excel42, 'info42'));
+excel47.addEventListener('change', () => handleFileSelect(excel47, 'info47'));
+excel61.addEventListener('change', () => handleFileSelect(excel61, 'info61'));
+excel63.addEventListener('change', () => handleFileSelect(excel63, 'info63'));
+excelDesmembramentos.addEventListener('change', () => handleFileSelect(excelDesmembramentos, 'infoDesmembramentos'));
 
 // Initialize
-initializeDate();
-setupDragAndDrop(salesUploadZone, salesImage);
-setupDragAndDrop(desmembramentosUploadZone, desmembramentosImage);
+initializePeriod();
 
-console.log('🚀 Sistema de Automação de Boletos carregado!');
+console.log('🚀 Sistema de Automação de Boletos v2.0 carregado!');
