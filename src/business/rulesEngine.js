@@ -84,6 +84,43 @@ function groupSalesByVendor(salesData) {
 }
 
 /**
+ * Groups desmembramentos by vendor and PDV code, summing values
+ */
+function groupDesmembramentos(desmembramentos) {
+    console.log('\n=== Agrupando desmembramentos por vendedor e PDV ===');
+    const grouped = [];
+    const groupMap = new Map();
+
+    for (const desm of desmembramentos) {
+        const key = `${normalizeVendorName(desm.vendor)}_${desm.pdvCode}`;
+
+        if (groupMap.has(key)) {
+            // PDV já existe para este vendedor, somar valores
+            const existing = groupMap.get(key);
+            existing.value += desm.value;
+            // Manter o vencimento mais recente
+            if (desm.vencimento) {
+                existing.vencimento = desm.vencimento;
+            }
+        } else {
+            // Novo PDV para este vendedor
+            groupMap.set(key, {
+                vendor: desm.vendor,
+                pdvCode: desm.pdvCode,
+                value: desm.value,
+                vencimento: desm.vencimento,
+                ddd: desm.ddd
+            });
+        }
+    }
+
+    const result = Array.from(groupMap.values());
+    console.log(`Desmembramentos agrupados: ${desmembramentos.length} → ${result.length} únicos`);
+
+    return result;
+}
+
+/**
  * Applies business rules based on DDD
  */
 function applyDDDRules(salesRecord, ddd) {
@@ -153,16 +190,20 @@ function splitBoletoIfNeeded(value, ddd, period) {
  */
 function applyDesmembramentos(salesData, desmembramentos) {
     console.log('\n=== Aplicando Desmembramentos ===');
+
+    // CRITICAL: Group desmembramentos by vendor and PDV first!
+    const groupedDesm = groupDesmembramentos(desmembramentos);
+
     const result = [];
 
     for (const sale of salesData) {
         console.log(`\nProcessando vendedor: ${sale.vendor} (Valor total: R$ ${sale.finalValue.toFixed(2)})`);
 
         // Find desmembramentos for this vendor
-        const vendorDesm = desmembramentos.filter(d => vendorsMatch(d.vendor, sale.vendor));
+        const vendorDesm = groupedDesm.filter(d => vendorsMatch(d.vendor, sale.vendor));
 
         if (vendorDesm.length > 0) {
-            console.log(`  Encontrados ${vendorDesm.length} desmembramentos:`);
+            console.log(`  Encontrados ${vendorDesm.length} PDVs únicos:`);
 
             // Calculate total desmembramento value
             let totalDesm = 0;
@@ -190,7 +231,7 @@ function applyDesmembramentos(salesData, desmembramentos) {
                 console.warn(`  AVISO: Valor restante negativo! Desmembramentos excedem total de vendas.`);
             }
 
-            // Then add desmembramento entries (with PDV codes)
+            // Then add desmembramento entries (ONE per PDV, with aggregated values)
             for (const desm of vendorDesm) {
                 result.push({
                     vendor: sale.vendor,
@@ -241,7 +282,7 @@ function processBusinessRules(salesData, desmembramentos, period) {
         };
     });
 
-    // Step 3: Apply desmembramentos
+    // Step 3: Apply desmembramentos (now with grouping!)
     const withDesmembramentos = applyDesmembramentos(processedSales, desmembramentos);
 
     // Step 4: Split boletos if needed
@@ -287,5 +328,6 @@ module.exports = {
     splitBoletoIfNeeded,
     normalizeVendorName,
     vendorsMatch,
-    groupSalesByVendor
+    groupSalesByVendor,
+    groupDesmembramentos
 };
