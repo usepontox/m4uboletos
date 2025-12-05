@@ -200,8 +200,10 @@ function applyDesmembramentos(salesData, desmembramentos) {
     for (const sale of salesData) {
         console.log(`\nProcessando vendedor: ${sale.vendor} (Valor total: R$ ${sale.finalValue.toFixed(2)})`);
 
-        // Find desmembramentos for this vendor
-        const vendorDesm = groupedDesm.filter(d => vendorsMatch(d.vendor, sale.vendor));
+        // Find desmembramentos for this vendor AND same DDD
+        const vendorDesm = groupedDesm.filter(d =>
+            vendorsMatch(d.vendor, sale.vendor) && d.ddd === sale.ddd
+        );
 
         if (vendorDesm.length > 0) {
             console.log(`  Encontrados ${vendorDesm.length} PDVs únicos:`);
