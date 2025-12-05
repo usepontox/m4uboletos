@@ -84,37 +84,37 @@ function groupSalesByVendor(salesData) {
 }
 
 /**
- * Groups desmembramentos by vendor and PDV code, summing values
+ * Groups desmembramentos by vendor, PDV code AND vencimento
  */
 function groupDesmembramentos(desmembramentos) {
     console.log('\n=== Agrupando desmembramentos por vendedor, PDV e vencimento ===');
     console.log('🔥 VERSÃO: 2024-12-05 16:10 - VENCIMENTO NO AGRUPAMENTO! 🔥');
-    const grouped = [];
     const groupMap = new Map();
 
-    // CRITICAL FIX: Include vencimento in key to preserve multiple entries with same PDV but different dates
-    const key = `${normalizeVendorName(desm.vendor)}_${desm.pdvCode}_${desm.vencimento}`;
+    for (const desm of desmembramentos) {
+        // CRITICAL FIX: Include vencimento in key to preserve multiple entries with same PDV but different dates
+        const key = `${normalizeVendorName(desm.vendor)}_${desm.pdvCode}_${desm.vencimento}`;
 
-    if (groupMap.has(key)) {
-        // Same vendor, PDV AND vencimento - sum values (rare case)
-        const existing = groupMap.get(key);
-        existing.value += desm.value;
-    } else {
-        // New combination of vendor + PDV + vencimento
-        groupMap.set(key, {
-            vendor: desm.vendor,
-            pdvCode: desm.pdvCode,
-            value: desm.value,
-            vencimento: desm.vencimento,
-            ddd: desm.ddd
-        });
+        if (groupMap.has(key)) {
+            // Same vendor, PDV AND vencimento - sum values (rare case)
+            const existing = groupMap.get(key);
+            existing.value += desm.value;
+        } else {
+            // New combination of vendor + PDV + vencimento
+            groupMap.set(key, {
+                vendor: desm.vendor,
+                pdvCode: desm.pdvCode,
+                value: desm.value,
+                vencimento: desm.vencimento,
+                ddd: desm.ddd
+            });
+        }
     }
-}
 
-const result = Array.from(groupMap.values());
-console.log(`Desmembramentos agrupados: ${desmembramentos.length} → ${result.length} únicos (por PDV + vencimento)`);
+    const result = Array.from(groupMap.values());
+    console.log(`Desmembramentos agrupados: ${desmembramentos.length} → ${result.length} únicos (por PDV + vencimento)`);
 
-return result;
+    return result;
 }
 
 /**
@@ -188,7 +188,7 @@ function splitBoletoIfNeeded(value, ddd, period) {
 function applyDesmembramentos(salesData, desmembramentos) {
     console.log('\n=== Aplicando Desmembramentos ===');
 
-    // CRITICAL: Group desmembramentos by vendor and PDV first!
+    // CRITICAL: Group desmembramentos by vendor, PDV AND vencimento first!
     const groupedDesm = groupDesmembramentos(desmembramentos);
 
     const result = [];
@@ -207,7 +207,7 @@ function applyDesmembramentos(salesData, desmembramentos) {
             // Calculate total desmembramento value
             let totalDesm = 0;
             vendorDesm.forEach(d => {
-                console.log(`    - PDV ${d.pdvCode}: R$ ${d.value.toFixed(2)}`);
+                console.log(`    - PDV ${d.pdvCode} (venc: ${d.vencimento}): R$ ${d.value.toFixed(2)}`);
                 totalDesm += d.value;
             });
 
@@ -230,7 +230,7 @@ function applyDesmembramentos(salesData, desmembramentos) {
                 console.warn(`  AVISO: Valor restante negativo! Desmembramentos excedem total de vendas.`);
             }
 
-            // Then add desmembramento entries (ONE per PDV, with aggregated values)
+            // Then add desmembramento entries (ONE per PDV + vencimento combination)
             for (const desm of vendorDesm) {
                 result.push({
                     vendor: sale.vendor,
@@ -281,7 +281,7 @@ function processBusinessRules(salesData, desmembramentos, period) {
         };
     });
 
-    // Step 3: Apply desmembramentos (now with grouping!)
+    // Step 3: Apply desmembramentos (now with grouping by PDV + vencimento!)
     const withDesmembramentos = applyDesmembramentos(processedSales, desmembramentos);
 
     // Step 4: Split boletos if needed
