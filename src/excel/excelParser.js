@@ -5,15 +5,21 @@ const XLSX = require('xlsx');
  */
 async function parseExcelSales(filePath, ddd) {
     try {
-        console.log(`Processando planilha DDD ${ddd}: ${filePath}`);
+        console.log(`\n=== PARSEANDO VENDAS DDD ${ddd} ===`);
+        console.log(`Arquivo: ${filePath}`);
 
         // Read the Excel file using xlsx library (supports both .xls and .xlsx)
         const workbook = XLSX.readFile(filePath);
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
 
+        console.log(`Sheet: ${sheetName}`);
+
         // Convert to JSON
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+        console.log(`Total de linhas no arquivo: ${jsonData.length}`);
+        console.log(`Header (primeira linha):`, jsonData[0]);
 
         const salesData = [];
 
@@ -31,7 +37,7 @@ async function parseExcelSales(filePath, ddd) {
                 continue;
             }
 
-            // Parse numeric values
+            // Parse numeric values - VENDAS tem 7 colunas
             const qtdVendas = parseFloat(row[1]) || 0;
             const valorLiquidoVendas = parseFloat(row[2]) || 0;
             const valorBrutoVendas = parseFloat(row[3]) || 0;
@@ -53,11 +59,15 @@ async function parseExcelSales(filePath, ddd) {
             }
         }
 
-        console.log(`DDD ${ddd}: ${salesData.length} registros encontrados`);
+        console.log(`✅ VENDAS DDD ${ddd}: ${salesData.length} vendedores encontrados`);
+        if (salesData.length > 0) {
+            console.log(`Exemplo primeiro vendedor:`, salesData[0]);
+        }
+
         return salesData;
 
     } catch (error) {
-        console.error(`Erro ao processar planilha DDD ${ddd}:`, error.message);
+        console.error(`❌ Erro ao processar planilha DDD ${ddd}:`, error.message);
         throw new Error(`Erro ao ler planilha DDD ${ddd}: ${error.message}`);
     }
 }
@@ -67,15 +77,21 @@ async function parseExcelSales(filePath, ddd) {
  */
 async function parseExcelDesmembramentos(filePath) {
     try {
-        console.log('Processando desmembramentos:', filePath);
+        console.log('\n=== PARSEANDO DESMEMBRAMENTOS ===');
+        console.log(`Arquivo: ${filePath}`);
 
         // Read the Excel file
         const workbook = XLSX.readFile(filePath);
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
 
+        console.log(`Sheet: ${sheetName}`);
+
         // Convert to JSON
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+        console.log(`Total de linhas no arquivo: ${jsonData.length}`);
+        console.log(`Header (primeira linha):`, jsonData[0]);
 
         const desmembramentos = [];
 
@@ -87,7 +103,6 @@ async function parseExcelDesmembramentos(filePath) {
             if (!row || row.length === 0) continue;
 
             // Adjust column indices based on actual Excel structure
-            // This may need adjustment based on your actual file structure
             const filial = row[2]; // Column C - FILIAL
             const vendor = row[3]; // Column D - Nome do vendedor
             const pdvCode = row[4]; // Column E - Código PDV
@@ -137,11 +152,15 @@ async function parseExcelDesmembramentos(filePath) {
             }
         }
 
-        console.log(`Desmembramentos: ${desmembramentos.length} registros encontrados`);
+        console.log(`✅ DESMEMBRAMENTOS: ${desmembramentos.length} registros encontrados`);
+        if (desmembramentos.length > 0) {
+            console.log(`Exemplo primeiro desmembramento:`, desmembramentos[0]);
+        }
+
         return desmembramentos;
 
     } catch (error) {
-        console.error('Erro ao processar desmembramentos:', error.message);
+        console.error('❌ Erro ao processar desmembramentos:', error.message);
         throw new Error(`Erro ao ler planilha de desmembramentos: ${error.message}`);
     }
 }
