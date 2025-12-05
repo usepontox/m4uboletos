@@ -44,16 +44,43 @@ function vendorsMatch(name1, name2) {
 }
 
 /**
- * Detects DDD from sales record or desmembramentos
+ * Groups sales data by vendor, summing all values
  */
-function detectDDD(salesRecord) {
-    // Use DDD from sales record if available
-    if (salesRecord.ddd) {
-        return salesRecord.ddd;
+function groupSalesByVendor(salesData) {
+    console.log('\n=== Agrupando vendas por vendedor ===');
+    const vendorMap = new Map();
+
+    for (const sale of salesData) {
+        const normalizedName = normalizeVendorName(sale.vendor);
+
+        if (vendorMap.has(normalizedName)) {
+            // Vendor already exists, sum the values
+            const existing = vendorMap.get(normalizedName);
+            existing.qtdVendas += sale.qtdVendas;
+            existing.valorLiquidoVendas += sale.valorLiquidoVendas;
+            existing.valorBrutoVendas += sale.valorBrutoVendas;
+            existing.qtdCobrancas += sale.qtdCobrancas;
+            existing.valorLiquidoCobrancas += sale.valorLiquidoCobrancas;
+            existing.valorBrutoCobrancas += sale.valorBrutoCobrancas;
+        } else {
+            // New vendor, add to map
+            vendorMap.set(normalizedName, {
+                vendor: sale.vendor, // Keep original name
+                ddd: sale.ddd,
+                qtdVendas: sale.qtdVendas,
+                valorLiquidoVendas: sale.valorLiquidoVendas,
+                valorBrutoVendas: sale.valorBrutoVendas,
+                qtdCobrancas: sale.qtdCobrancas,
+                valorLiquidoCobrancas: sale.valorLiquidoCobrancas,
+                valorBrutoCobrancas: sale.valorBrutoCobrancas
+            });
+        }
     }
 
-    // Default to 42
-    return 42;
+    const grouped = Array.from(vendorMap.values());
+    console.log(`Total de vendedores únicos: ${grouped.length}`);
+
+    return grouped;
 }
 
 /**
@@ -150,7 +177,20 @@ function applyDesmembramentos(salesData, desmembramentos) {
             const remainingValue = sale.finalValue - totalDesm;
             console.log(`  Valor restante para ${sale.vendor}: R$ ${remainingValue.toFixed(2)}`);
 
-            // Add desmembramento entries FIRST (with PDV codes)
+            // Add main vendor entry with remaining value FIRST (WITHOUT PDV code)
+            if (remainingValue > 0) {
+                result.push({
+                    ...sale,
+                    finalValue: remainingValue,
+                    isDesmembramento: false,
+                    pdvCode: null,
+                    vencimento: null
+                });
+            } else if (remainingValue < 0) {
+                console.warn(`  AVISO: Valor restante negativo! Desmembramentos excedem total de vendas.`);
+            }
+
+            // Then add desmembramento entries (with PDV codes)
             for (const desm of vendorDesm) {
                 result.push({
                     vendor: sale.vendor,
@@ -161,25 +201,14 @@ function applyDesmembramentos(salesData, desmembramentos) {
                     ddd: sale.ddd || desm.ddd
                 });
             }
-
-            // Add main vendor entry with remaining value (WITHOUT PDV code)
-            if (remainingValue > 0) {
-                result.push({
-                    ...sale,
-                    finalValue: remainingValue,
-                    isDesmembramento: false,
-                    pdvCode: null // Explicitly set to null
-                });
-            } else if (remainingValue < 0) {
-                console.warn(`  AVISO: Valor restante negativo! Desmembramentos excedem total de vendas.`);
-            }
         } else {
             console.log(`  Nenhum desmembramento encontrado`);
             // No desmembramentos, keep original
             result.push({
                 ...sale,
                 isDesmembramento: false,
-                pdvCode: null
+                pdvCode: null,
+                vencimento: null
             });
         }
     }
@@ -193,12 +222,16 @@ function applyDesmembramentos(salesData, desmembramentos) {
  */
 function processBusinessRules(salesData, desmembramentos, period) {
     console.log('\n=== Iniciando Processamento de Regras de Negócio ===');
-    console.log(`Total de vendas: ${salesData.length}`);
+    console.log(`Total de linhas de vendas: ${salesData.length}`);
     console.log(`Total de desmembramentos: ${desmembramentos.length}`);
 
-    // Step 1: Detect DDD and apply DDD-specific rules
-    const processedSales = salesData.map(sale => {
-        const ddd = detectDDD(sale);
+    // Step 1: Group sales by vendor (CRITICAL FIX!)
+    const groupedSales = groupSalesByVendor(salesData);
+    console.log(`Total de vendedores únicos após agrupamento: ${groupedSales.length}`);
+
+    // Step 2: Apply DDD-specific rules to grouped data
+    const processedSales = groupedSales.map(sale => {
+        const ddd = sale.ddd;
         const finalValue = applyDDDRules(sale, ddd);
 
         return {
@@ -208,10 +241,10 @@ function processBusinessRules(salesData, desmembramentos, period) {
         };
     });
 
-    // Step 2: Apply desmembramentos
+    // Step 3: Apply desmembramentos
     const withDesmembramentos = applyDesmembramentos(processedSales, desmembramentos);
 
-    // Step 3: Split boletos if needed
+    // Step 4: Split boletos if needed
     const finalData = [];
     for (const item of withDesmembramentos) {
         const splits = splitBoletoIfNeeded(item.finalValue, item.ddd, period);
@@ -250,9 +283,9 @@ function generateSequentialNumbers(data, startingNumber) {
 module.exports = {
     processBusinessRules,
     generateSequentialNumbers,
-    detectDDD,
     applyDDDRules,
     splitBoletoIfNeeded,
     normalizeVendorName,
-    vendorsMatch
+    vendorsMatch,
+    groupSalesByVendor
 };
