@@ -14,35 +14,17 @@
             <div class="header-content">
                 <img src="images/logo.png" alt="M4U Logo" class="logo">
                 <div class="header-text">
-                    <h1>M4U - BOLETOS ESTRUTURAL</h1>
-                    <p class="subtitle">Processamento automático de planilhas Excel</p>
+                    <label for="startingNumber">Número Inicial</label>
+                    <input type="number" id="startingNumber" name="startingNumber" min="1" required
+                        placeholder="Ex: 213573">
+                </div>
+                <div class="input-group">
+                    <label for="period">Período</label>
+                    <input type="text" id="period" name="period" required
+                        placeholder="DD.MM.AA (00:00) A DD.MM.AA (23:59)">
+                    <small class="input-hint">Exemplo: 18.11 (00:00) A 18.11 (23:59)</small>
                 </div>
             </div>
-        </header>
-
-        <main class="main-content">
-            <label for="excelDesmembramentos">Desmembramentos</label>
-            <input type="file" id="excelDesmembramentos" name="excelDesmembramentos" accept=".xls,.xlsx" required>
-            <div class="file-info" id="infoDesmembramentos"></div>
-    </div>
-    <p class="upload-note">📝 Arquivo Excel com todos os desmembramentos</p>
-    </div>
-
-    <!-- Configuration Section -->
-    <div class="config-section">
-        <h2>⚙️ 3. Configurações</h2>
-        <div class="config-grid">
-            <div class="input-group">
-                <label for="startingNumber">Número Inicial</label>
-                <input type="number" id="startingNumber" name="startingNumber" min="1" required
-                    placeholder="Ex: 213573">
-            </div>
-            <div class="input-group">
-                <label for="period">Período</label>
-                <input type="text" id="period" name="period" required placeholder="DD.MM.AA (00:00) A DD.MM.AA (23:59)">
-                <small class="input-hint">Exemplo: 18.11 (00:00) A 18.11 (23:59)</small>
-            </div>
-        </div>
     </div>
 
     <!-- Submit Button -->
